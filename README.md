@@ -2,7 +2,7 @@
 
 This project is a language I am creating while reading the book [Writing an Interpreter in GO](https://interpreterbook.com).
 
-List of features:
+List of original features from the book:
 
 - C-like syntax
 - variable bindings
@@ -16,13 +16,10 @@ List of features:
   - array
   - hash
 
-Need to Build:
+List of features I would like to add if I get the time:
 
-- [ ] Lexer
-- [ ] Parser
-- [ ] Abstract Syntax Tree (AST)
-- [ ] Internal object system
-- [ ] Evaluator
+- [ ] Function declaration support
+- [ ] Float number support
 
 ---
 
