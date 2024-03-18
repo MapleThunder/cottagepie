@@ -1,0 +1,10 @@
+{
+  "workbench.colorCustomizations": {
+    "[*]": {
+      "titleBar.activeBackground": "#b0693e",
+      "titleBar.activeForeground": "#ddd"
+    }
+  },
+  "window.titleBarStyle": "custom",
+  "cSpell.language": "en,en-CA"
+}
