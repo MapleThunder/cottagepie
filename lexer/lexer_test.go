@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"cottagepie/token"
 	"testing"
+
+	"cottagepie/token"
 )
 
 func TestNextToken(t *testing.T) {
