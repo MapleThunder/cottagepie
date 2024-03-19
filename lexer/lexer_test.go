@@ -7,14 +7,14 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	input := `let five = 5;
-		let ten = 10;
+	input := `bake five to 5;
+		bake ten to 10;
 		
-		let add = fn(x, y) {
+		bake add to fn(x, y) {
 			x + y;
 		};
 		
-		let result = add(five, ten);
+		bake result to add(five, ten);
 		!-/*5;
 		5 < 10 > 5;
 		
@@ -32,21 +32,21 @@ func TestNextToken(t *testing.T) {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		{token.LET, "let"},
+		{token.BAKE, "bake"},
 		{token.IDENT, "five"},
-		{token.ASSIGN, "="},
+		{token.ASSIGN, "to"},
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 
-		{token.LET, "let"},
+		{token.BAKE, "bake"},
 		{token.IDENT, "ten"},
-		{token.ASSIGN, "="},
+		{token.ASSIGN, "to"},
 		{token.INT, "10"},
 		{token.SEMICOLON, ";"},
 
-		{token.LET, "let"},
+		{token.BAKE, "bake"},
 		{token.IDENT, "add"},
-		{token.ASSIGN, "="},
+		{token.ASSIGN, "to"},
 		{token.FUNCTION, "fn"},
 		{token.LPAREN, "("},
 		{token.IDENT, "x"},
@@ -61,9 +61,9 @@ func TestNextToken(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.SEMICOLON, ";"},
 
-		{token.LET, "let"},
+		{token.BAKE, "bake"},
 		{token.IDENT, "result"},
-		{token.ASSIGN, "="},
+		{token.ASSIGN, "to"},
 		{token.IDENT, "add"},
 		{token.LPAREN, "("},
 		{token.IDENT, "five"},

@@ -20,27 +20,28 @@ List of features I would like to add if I get the time:
 
 - [ ] Function declaration support
 - [ ] Float number support
+- [ ] Comment support
 
 ---
 
 Here is how to bind values to names in CottagePie:
 
 ```js
-let age = 22;
-let name = "CottagePie";
-let result = 10 * (20 / 2);
+bake age to 22;
+bake name to "CottagePie";
+bake result to 10 * (20 / 2);
 ```
 
 Besides integers, booleans and strings, the CottagePie interpreter also support arrays and hashes. Here’s what binding an array of integers to a name looks like:
 
 ```js
-let my_array = [1, 2, 3, 4, 5];
+bake my_array to [1, 2, 3, 4, 5];
 ```
 
 And here is a hash, where values are associated with keys:
 
 ```js
-let niko = {"name": "Niko", "age": 22};
+bake niko to {"name": "Niko", "age": 22};
 ```
 
 Accessing the elements in arrays and hashes is done with index expressions:
@@ -50,16 +51,16 @@ myArray[0]       // => 1
 niko["name"]     // => "Niko"
 ```
 
-The let statements can also be used to bind functions to names. Here’s a small function that adds two numbers:
+The bake statements can also be used to bind functions to names. Here’s a small function that adds two numbers:
 
 ```js
-let add = fn(a, b) { return a + b; };
+bake add to fn(a, b) { return a + b; };
 ```
 
-But CottagePie not only supports return statements. Implicit return values are also possible, which means we can leave out the return if we want to:
+CottagePie not only supports return statements, implicit return values are also possible ! Which means we can leave out the return if we want to:
 
 ```js
-let add = fn(a, b) { a + b; };
+bake add to fn(a, b) { a + b; };
 ```
 
 And calling a function is as easy as you’d expect:
