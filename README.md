@@ -53,19 +53,19 @@ myArray[0]       // => 1
 niko["name"]     // => "Niko"
 ```
 
-The bake statements can also be used to bind functions to names. Here’s a small function that adds two numbers:
+The bake statements can also be used to bind recipes (functions) to names. Here’s a small recipe that adds two numbers:
 
 ```js
 bake add to recipe(a, b) { serves a + b; };
 ```
 
-CottagePie not only supports return statements, implicit return values are also possible ! Which means we can leave out the return if we want to:
+CottagePie not only supports serves (return) statements, implicit serves values are also possible ! Which means we can leave out the serves if we want to:
 
 ```js
 bake add to fn(a, b) { a + b; };
 ```
 
-And calling a function is as easy as you’d expect:
+And calling a recipe is as easy as you’d expect:
 
 ```js
 add(1, 2);
