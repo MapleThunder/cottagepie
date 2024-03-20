@@ -10,7 +10,7 @@ func TestNextToken(t *testing.T) {
 	input := `bake five to 5;
 		bake ten to 10;
 		
-		bake add to fn(x, y) {
+		bake add to recipe(x, y) {
 			x + y;
 		};
 		
@@ -19,9 +19,9 @@ func TestNextToken(t *testing.T) {
 		5 < 10 > 5;
 		
 		if (5 < 10) {
-			return true;
+			serves true;
 		} else {
-			return false;
+			serves false;
 		}
 		
 		10 == 10;
@@ -47,7 +47,7 @@ func TestNextToken(t *testing.T) {
 		{token.BAKE, "bake"},
 		{token.IDENT, "add"},
 		{token.ASSIGN, "to"},
-		{token.FUNCTION, "fn"},
+		{token.RECIPE, "recipe"},
 		{token.LPAREN, "("},
 		{token.IDENT, "x"},
 		{token.COMMA, ","},
@@ -93,13 +93,13 @@ func TestNextToken(t *testing.T) {
 		{token.INT, "10"},
 		{token.RPAREN, ")"},
 		{token.LBRACE, "{"},
-		{token.RETURN, "return"},
+		{token.SERVES, "serves"},
 		{token.TRUE, "true"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 		{token.ELSE, "else"},
 		{token.LBRACE, "{"},
-		{token.RETURN, "return"},
+		{token.SERVES, "serves"},
 		{token.FALSE, "false"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
