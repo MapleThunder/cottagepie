@@ -49,6 +49,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.BAKE:
 		return p.parseBakeStatement()
+	case token.SERVES:
+		return p.parseServesStatement()
 	default:
 		return nil
 	}
@@ -68,6 +70,19 @@ func (p *Parser) parseBakeStatement() *ast.BakeStatement {
 	}
 
 	// TODO: Skipping expressions until I encounter a semicolon
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseServesStatement() *ast.ServesStatement {
+	stmt := &ast.ServesStatement{Token: p.curToken}
+
+	p.nextToken()
+
+	// todo: Skipping expressions until encountering a semicolon
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}

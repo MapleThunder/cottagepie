@@ -16,6 +16,7 @@ type Expression interface {
 	expressionNode()
 }
 
+// Program
 type Program struct {
 	Statements []Statement
 }
@@ -28,6 +29,16 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+// Identifier
+type Identifier struct {
+	Token token.Token // the token.IDENT token
+	Value string
+}
+
+func (i *Identifier) statementNode()       {}
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+
+// Bake Statement
 type BakeStatement struct {
 	Token token.Token // the token.BAKE token
 	Name  *Identifier
@@ -37,10 +48,11 @@ type BakeStatement struct {
 func (ls *BakeStatement) statementNode()       {}
 func (ls *BakeStatement) TokenLiteral() string { return ls.Token.Literal }
 
-type Identifier struct {
-	Token token.Token // the token.IDENT token
-	Value string
+// Serves Statement
+type ServesStatement struct {
+	Token       token.Token // the 'serves' token
+	ReturnValue Expression
 }
 
-func (i *Identifier) statementNode()       {}
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (rs *ServesStatement) statementNode()       {}
+func (rs *ServesStatement) TokenLiteral() string { return rs.Token.Literal }

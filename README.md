@@ -56,7 +56,7 @@ niko["name"]     // => "Niko"
 The bake statements can also be used to bind functions to names. Here’s a small function that adds two numbers:
 
 ```js
-bake add to fn(a, b) { return a + b; };
+bake add to recipe(a, b) { serves a + b; };
 ```
 
 CottagePie not only supports return statements, implicit return values are also possible ! Which means we can leave out the return if we want to:
