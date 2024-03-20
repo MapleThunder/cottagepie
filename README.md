@@ -19,10 +19,12 @@ List of original features from the book:
 List of features I would like to add if I get the time:
 
 - [ ] Function declaration support
-- [ ] Float number support
-- [ ] Comment support
+- [ ] Comment support ("//")
+- [ ] Add line numbers (and maybe column numbers) to error messages
 
 ---
+
+## Usage
 
 Here is how to bind values to names in CottagePie:
 

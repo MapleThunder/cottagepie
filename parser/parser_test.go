@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestBakeStatements(testState *testing.T) {
+func TestBakeStatements(t *testing.T) {
 	input := `bake x to 5;
 		bake y to 10;
 		bake title to "CottagePie";
@@ -16,12 +16,13 @@ func TestBakeStatements(testState *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
 	if program == nil {
-		testState.Fatalf("ParseProgram() returned nil")
+		t.Fatalf("ParseProgram() returned nil")
 	}
 
 	if len(program.Statements) != 3 {
-		testState.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
+		t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
 	}
 
 	tests := []struct {
@@ -34,7 +35,7 @@ func TestBakeStatements(testState *testing.T) {
 
 	for index, testData := range tests {
 		statement := program.Statements[index]
-		if !testBakeStatement(testState, statement, testData.expectedIdentifier) {
+		if !testBakeStatement(t, statement, testData.expectedIdentifier) {
 			return
 		}
 	}
@@ -61,4 +62,17 @@ func testBakeStatement(t *testing.T, statement ast.Statement, name string) bool 
 	}
 
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("Parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("Parser error: %q", msg)
+	}
+	t.FailNow()
 }
