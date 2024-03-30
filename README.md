@@ -62,7 +62,7 @@ bake add to recipe(a, b) { serves a + b; };
 CottagePie not only supports serves (return) statements, implicit serves values are also possible ! Which means we can leave out the serves if we want to:
 
 ```js
-bake add to fn(a, b) { a + b; };
+bake add to rc(a, b) { a + b; };
 ```
 
 And calling a recipe is as easy as you’d expect:

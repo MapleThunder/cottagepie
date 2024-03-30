@@ -83,7 +83,7 @@ func (bs *BakeStatement) String() string {
 
 	out.WriteString(bs.TokenLiteral() + " ")
 	out.WriteString(bs.Name.String())
-	out.WriteString(" = ")
+	out.WriteString(" to ")
 
 	if bs.Value != nil {
 		out.WriteString(bs.Value.String())
