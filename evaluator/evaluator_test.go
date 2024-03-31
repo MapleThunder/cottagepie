@@ -93,6 +93,90 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestServesStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"serves 10;", 10},
+		{"serves 10; 9;", 10},
+		{"serves 2 * 5; 9;", 10},
+		{"9; serves 2 * 5; 9;", 10},
+		{
+			`if (10 > 1) {
+				if (10 > 1) {
+				  serves 10;
+				}
+				serves 1;
+			}`, 10,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			"5 + true;",
+			"Type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"5 + true; 5;",
+			"Type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"-true",
+			"Unknown operator: -BOOLEAN",
+		},
+		{
+			"true + false;",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"5; true + false; 5",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"if (10 > 1) { true + false; }",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			`
+				if (10 > 1) {
+					if (10 > 1) {
+						serves true + false;
+					}
+
+					serves 1;
+				}
+			`,
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("No error object served. got=%T (%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("Wrong error message. Expected=%s, got=%s", tt.expectedMessage, errObj.Message)
+			continue
+		}
+	}
+}
+
 // Test Operators
 func TestBangOperator(t *testing.T) {
 	tests := []struct {
