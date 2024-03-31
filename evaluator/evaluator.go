@@ -12,30 +12,40 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, book *object.Cookbook) object.Object {
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
-		return evalProgram(node)
+		return evalProgram(node, book)
 
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, book)
+
+	case *ast.BakeStatement:
+		val := Eval(node.Value, book)
+		if isError(val) {
+			return val
+		}
+		book.Set(node.Name.Value, val)
+
+	case *ast.Identifier:
+		return evalIdentifier(node, book)
 
 	// Expressions
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
+		right := Eval(node.Right, book)
 		if isError(right) {
 			return right
 		}
 		return evalPrefixExpression(node.Operator, right)
 
 	case *ast.InfixExpression:
-		left := Eval(node.Left)
+		left := Eval(node.Left, book)
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(node.Right)
+		right := Eval(node.Right, book)
 		if isError(right) {
 			return right
 		}
@@ -43,10 +53,10 @@ func Eval(node ast.Node) object.Object {
 		return evalInfixExpression(node.Operator, left, right)
 
 	case *ast.IfExpression:
-		return evalIfExpression(node)
+		return evalIfExpression(node, book)
 
 	case *ast.BlockStatement:
-		return evalBlockStatement(node)
+		return evalBlockStatement(node, book)
 
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -55,7 +65,7 @@ func Eval(node ast.Node) object.Object {
 		return nativeBoolToBooleanObject(node.Value)
 
 	case *ast.ServesStatement:
-		val := Eval(node.ServesValue)
+		val := Eval(node.ServesValue, book)
 		if isError(val) {
 			return val
 		}
@@ -65,11 +75,11 @@ func Eval(node ast.Node) object.Object {
 	return nil
 }
 
-func evalProgram(program *ast.Program) object.Object {
+func evalProgram(program *ast.Program, book *object.Cookbook) object.Object {
 	var result object.Object
 
 	for _, statement := range program.Statements {
-		result = Eval(statement)
+		result = Eval(statement, book)
 
 		switch result := result.(type) {
 		case *object.ServesValue:
@@ -124,11 +134,11 @@ func evalBangOperatorExpression(right object.Object) object.Object {
 	}
 }
 
-func evalBlockStatement(block *ast.BlockStatement) object.Object {
+func evalBlockStatement(block *ast.BlockStatement, book *object.Cookbook) object.Object {
 	var result object.Object
 
 	for _, statement := range block.Statements {
-		result = Eval(statement)
+		result = Eval(statement, book)
 
 		if result != nil {
 			rt := result.Type()
@@ -192,19 +202,28 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 	}
 }
 
-func evalIfExpression(ie *ast.IfExpression) object.Object {
-	condition := Eval(ie.Condition)
+func evalIfExpression(ie *ast.IfExpression, book *object.Cookbook) object.Object {
+	condition := Eval(ie.Condition, book)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(ie.Consequence)
+		return Eval(ie.Consequence, book)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative)
+		return Eval(ie.Alternative, book)
 	} else {
 		return NULL
 	}
+}
+
+func evalIdentifier(node *ast.Identifier, book *object.Cookbook) object.Object {
+	val, ok := book.Get(node.Value)
+	if !ok {
+		return newError("Identifier not found: " + node.Value)
+	}
+
+	return val
 }
 
 func isTruthy(obj object.Object) bool {

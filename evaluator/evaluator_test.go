@@ -7,6 +7,70 @@ import (
 	"testing"
 )
 
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			"5 + true;",
+			"Type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"5 + true; 5;",
+			"Type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"-true",
+			"Unknown operator: -BOOLEAN",
+		},
+		{
+			"true + false;",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"5; true + false; 5",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"if (10 > 1) { true + false; }",
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			`
+				if (10 > 1) {
+					if (10 > 1) {
+						serves true + false;
+					}
+
+					serves 1;
+				}
+			`,
+			"Unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"foobar",
+			"Identifier not found: foobar",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("No error object served. got=%T (%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("Wrong error message. Expected=%s, got=%s", tt.expectedMessage, errObj.Message)
+			continue
+		}
+	}
+
+}
+
 // Test Expressions
 func TestEvalIntegerExpression(t *testing.T) {
 	tests := []struct {
@@ -93,6 +157,7 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+// Test Statements
 func TestServesStatements(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -118,62 +183,19 @@ func TestServesStatements(t *testing.T) {
 	}
 }
 
-func TestErrorHandling(t *testing.T) {
+func TestBakeStatements(t *testing.T) {
 	tests := []struct {
-		input           string
-		expectedMessage string
+		input    string
+		expected int64
 	}{
-		{
-			"5 + true;",
-			"Type mismatch: INTEGER + BOOLEAN",
-		},
-		{
-			"5 + true; 5;",
-			"Type mismatch: INTEGER + BOOLEAN",
-		},
-		{
-			"-true",
-			"Unknown operator: -BOOLEAN",
-		},
-		{
-			"true + false;",
-			"Unknown operator: BOOLEAN + BOOLEAN",
-		},
-		{
-			"5; true + false; 5",
-			"Unknown operator: BOOLEAN + BOOLEAN",
-		},
-		{
-			"if (10 > 1) { true + false; }",
-			"Unknown operator: BOOLEAN + BOOLEAN",
-		},
-		{
-			`
-				if (10 > 1) {
-					if (10 > 1) {
-						serves true + false;
-					}
-
-					serves 1;
-				}
-			`,
-			"Unknown operator: BOOLEAN + BOOLEAN",
-		},
+		{"bake a = 5; a;", 5},
+		{"bake a = 5 * 5; a;", 25},
+		{"bake a = 5; bake b = a; b;", 5},
+		{"bake a = 5; bake b = a; bake c = a + b + 5; c;", 15},
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
-
-		errObj, ok := evaluated.(*object.Error)
-		if !ok {
-			t.Errorf("No error object served. got=%T (%+v)", evaluated, evaluated)
-			continue
-		}
-
-		if errObj.Message != tt.expectedMessage {
-			t.Errorf("Wrong error message. Expected=%s, got=%s", tt.expectedMessage, errObj.Message)
-			continue
-		}
+		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
 }
 
@@ -201,8 +223,9 @@ func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
+	book := object.NewCookbook()
 
-	return Eval(program)
+	return Eval(program, book)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"cottagepie/evaluator"
 	"cottagepie/lexer"
+	"cottagepie/object"
 	"cottagepie/parser"
 	"fmt"
 	"io"
@@ -18,6 +19,7 @@ const ERROR_MESSAGE = `
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	book := object.NewCookbook()
 
 	for {
 		fmt.Fprintf(out, PROMPT)
@@ -36,7 +38,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, book)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
