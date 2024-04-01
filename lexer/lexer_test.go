@@ -30,6 +30,7 @@ func TestNextToken(t *testing.T) {
 		"Cristiano Ronaldo"
 		'CR7'
 		'Cristiano Ronaldo'
+		[1, 2];
 	`
 
 	tests := []struct {
@@ -122,6 +123,14 @@ func TestNextToken(t *testing.T) {
 		{token.STRING, "Cristiano Ronaldo"},
 		{token.STRING, "CR7"},
 		{token.STRING, "Cristiano Ronaldo"},
+
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
+
 		{token.EOF, ""},
 	}
 

@@ -52,13 +52,22 @@ func Eval(node ast.Node, book *object.Cookbook) object.Object {
 		if isError(left) {
 			return left
 		}
-
 		right := Eval(node.Right, book)
 		if isError(right) {
 			return right
 		}
-
 		return evalInfixExpression(node.Operator, left, right)
+
+	case *ast.IndexExpression:
+		left := Eval(node.Left, book)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, book)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 
 	case *ast.IfExpression:
 		return evalIfExpression(node, book)
@@ -88,8 +97,14 @@ func Eval(node ast.Node, book *object.Cookbook) object.Object {
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
-
 		return applyRecipe(recipe, args)
+
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, book)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+		return &object.Array{Elements: elements}
 	}
 
 	return nil
@@ -250,12 +265,15 @@ func evalIfExpression(ie *ast.IfExpression, book *object.Cookbook) object.Object
 }
 
 func evalIdentifier(node *ast.Identifier, book *object.Cookbook) object.Object {
-	val, ok := book.Get(node.Value)
-	if !ok {
-		return newError("Identifier not found: " + node.Value)
+	if val, ok := book.Get(node.Value); ok {
+		return val
 	}
 
-	return val
+	if built_in, ok := built_ins[node.Value]; ok {
+		return built_in
+	}
+
+	return newError("Identifier not found: " + node.Value)
 }
 
 func evalExpressions(exps []ast.Expression, book *object.Cookbook) []object.Object {
@@ -272,6 +290,15 @@ func evalExpressions(exps []ast.Expression, book *object.Cookbook) []object.Obje
 	return result
 }
 
+func evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(left, index)
+	default:
+		return newError("Index operator not supported: %s", left.Type())
+	}
+}
+
 func isTruthy(obj object.Object) bool {
 	switch obj {
 	case NULL:
@@ -286,14 +313,18 @@ func isTruthy(obj object.Object) bool {
 }
 
 func applyRecipe(rc object.Object, args []object.Object) object.Object {
-	recipe, ok := rc.(*object.Recipe)
-	if !ok {
+	switch recipe := rc.(type) {
+	case *object.Recipe:
+		extendedBook := extendRecipeBook(recipe, args)
+		evaluated := Eval(recipe.Body, extendedBook)
+		return unwrapServesValue(evaluated)
+
+	case *object.BuiltIn:
+		return recipe.Fn(args...)
+
+	default:
 		return newError("Not a function: %s", rc.Type())
 	}
-
-	extendedBook := extendRecipeBook(recipe, args)
-	evaluated := Eval(recipe.Body, extendedBook)
-	return unwrapServesValue(evaluated)
 }
 
 func extendRecipeBook(rc *object.Recipe, args []object.Object) *object.Cookbook {
@@ -311,4 +342,15 @@ func unwrapServesValue(obj object.Object) object.Object {
 		return serves_value.Value
 	}
 	return obj
+}
+
+func evalArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObject := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrayObject.Elements) - 1)
+
+	if idx < 0 || idx > max {
+		return NULL
+	}
+	return arrayObject.Elements[idx]
 }

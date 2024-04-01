@@ -17,6 +17,8 @@ const (
 	SERVES_VALUE_OBJ = "SERVES_VALUE"
 	ERROR_OBJ        = "ERROR"
 	RECIPE_OBJ       = "RECIPE"
+	BUILT_IN_OBJ     = "BUILT_IN"
+	ARRAY_OBJ        = "ARRAY"
 )
 
 type Object interface {
@@ -92,6 +94,37 @@ func (r *Recipe) Inspect() string {
 	out.WriteString(") {\n")
 	out.WriteString(r.Body.String())
 	out.WriteString("\n}")
+
+	return out.String()
+}
+
+// Built In Recipe
+type BuiltInRecipe func(args ...Object) Object
+
+type BuiltIn struct {
+	Fn BuiltInRecipe
+}
+
+func (b *BuiltIn) Type() ObjectType { return BUILT_IN_OBJ }
+func (b *BuiltIn) Inspect() string  { return "built-in function" }
+
+// Array
+type Array struct {
+	Elements []Object
+}
+
+func (ao *Array) Type() ObjectType { return ARRAY_OBJ }
+func (ao *Array) Inspect() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, e := range ao.Elements {
+		elements = append(elements, e.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
 
 	return out.String()
 }
