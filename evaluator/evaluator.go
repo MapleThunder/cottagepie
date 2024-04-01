@@ -28,10 +28,18 @@ func Eval(node ast.Node, book *object.Cookbook) object.Object {
 		}
 		book.Set(node.Name.Value, val)
 
+	// Expressions
 	case *ast.Identifier:
 		return evalIdentifier(node, book)
 
-	// Expressions
+	case *ast.RecipeLiteral:
+		params := node.Parameters
+		body := node.Body
+		return &object.Recipe{Parameters: params, Body: body, Cookbook: book}
+
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
+
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, book)
 		if isError(right) {
@@ -70,6 +78,18 @@ func Eval(node ast.Node, book *object.Cookbook) object.Object {
 			return val
 		}
 		return &object.ServesValue{Value: val}
+
+	case *ast.CallExpression:
+		recipe := Eval(node.Recipe, book)
+		if isError(recipe) {
+			return recipe
+		}
+		args := evalExpressions(node.Arguments, book)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+
+		return applyRecipe(recipe, args)
 	}
 
 	return nil
@@ -226,6 +246,20 @@ func evalIdentifier(node *ast.Identifier, book *object.Cookbook) object.Object {
 	return val
 }
 
+func evalExpressions(exps []ast.Expression, book *object.Cookbook) []object.Object {
+	var result []object.Object
+
+	for _, e := range exps {
+		evaluated := Eval(e, book)
+		if isError(evaluated) {
+			return []object.Object{evaluated}
+		}
+		result = append(result, evaluated)
+	}
+
+	return result
+}
+
 func isTruthy(obj object.Object) bool {
 	switch obj {
 	case NULL:
@@ -237,4 +271,32 @@ func isTruthy(obj object.Object) bool {
 	default:
 		return true
 	}
+}
+
+func applyRecipe(rc object.Object, args []object.Object) object.Object {
+	recipe, ok := rc.(*object.Recipe)
+	if !ok {
+		return newError("Not a function: %s", rc.Type())
+	}
+
+	extendedBook := extendRecipeBook(recipe, args)
+	evaluated := Eval(recipe.Body, extendedBook)
+	return unwrapServesValue(evaluated)
+}
+
+func extendRecipeBook(rc *object.Recipe, args []object.Object) *object.Cookbook {
+	book := object.NewExtendedCookbook(rc.Cookbook)
+
+	for param_idx, param := range rc.Parameters {
+		book.Set(param.Value, args[param_idx])
+	}
+
+	return book
+}
+
+func unwrapServesValue(obj object.Object) object.Object {
+	if serves_value, ok := obj.(*object.ServesValue); ok {
+		return serves_value.Value
+	}
+	return obj
 }

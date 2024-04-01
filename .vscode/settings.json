@@ -5,6 +5,5 @@
       "titleBar.activeForeground": "#ddd"
     }
   },
-  "window.titleBarStyle": "custom",
-  "cSpell.language": "en,en-CA"
+  "window.titleBarStyle": "custom"
 }

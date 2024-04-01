@@ -26,6 +26,10 @@ func TestNextToken(t *testing.T) {
 		
 		10 == 10;
 		10 != 9;
+		"CR7"
+		"Cristiano Ronaldo"
+		'CR7'
+		'Cristiano Ronaldo'
 	`
 
 	tests := []struct {
@@ -114,6 +118,10 @@ func TestNextToken(t *testing.T) {
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
 
+		{token.STRING, "CR7"},
+		{token.STRING, "Cristiano Ronaldo"},
+		{token.STRING, "CR7"},
+		{token.STRING, "Cristiano Ronaldo"},
 		{token.EOF, ""},
 	}
 

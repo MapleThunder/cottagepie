@@ -100,6 +100,21 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	input := `"Cristiano Ronaldo!"`
+	expected := "Cristiano Ronaldo!"
+
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Errorf("Object is not a String. got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != expected {
+		t.Errorf("String has wrong value. got=%q", str.Value)
+	}
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -197,6 +212,61 @@ func TestBakeStatements(t *testing.T) {
 	for _, tt := range tests {
 		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
+}
+
+func TestRecipeObject(t *testing.T) {
+	input := "recipe(x) { x + 7; };"
+
+	evaluated := testEval(input)
+	rc, ok := evaluated.(*object.Recipe)
+	if !ok {
+		t.Fatalf("Object is not Recipe. Got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if len(rc.Parameters) != 1 {
+		t.Fatalf("Recipe has wrong parameters. Parameters=%+v", rc.Parameters)
+	}
+
+	if rc.Parameters[0].String() != "x" {
+		t.Fatalf("First parameter is not 'x', got=%q", rc.Parameters[0])
+	}
+
+	expectedBody := "(x + 7)"
+
+	if rc.Body.String() != expectedBody {
+		t.Fatalf("Body is not %q, got=%q", expectedBody, rc.Body.String())
+	}
+}
+
+func TestRecipeApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"bake identity to recipe(x) { x; }; identity(5);", 5},
+		{"bake identity to recipe(x) { serves x; }; identity(5);", 5},
+		{"bake double to recipe(x) { x * 2; }; double(5);", 10},
+		{"bake add to recipe(x, y) { x + y; }; add(5, 5);", 10},
+		{"bake add to recipe(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+		{"recipe(x) { x; }(5)", 5},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
+
+func TestClosures(t *testing.T) {
+	input := `
+		bake newAdder to recipe(x) {
+			rc(y) { x + y };
+		};
+
+		bake addTwo to newAdder(2);
+		addTwo(2);
+	`
+
+	testIntegerObject(t, testEval(input), 4)
 }
 
 // Test Operators
