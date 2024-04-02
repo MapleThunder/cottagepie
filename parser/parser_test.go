@@ -721,6 +721,179 @@ func TestParsingIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingHashLiteralStringKeys(t *testing.T) {
+	input := `{ "one": 1, "two": 2, "three": 3 }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expression is not HashLiteral, got=%T", stmt.Expression)
+	}
+
+	if len(hash.Pairs) != 3 {
+		t.Fatalf("Wrong number of hash pairs, expected=%d got=%d", 3, len(hash.Pairs))
+	}
+
+	expected := map[string]int64{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	}
+
+	for key, value := range hash.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("Key is not ast.StringLiteral, got=%T", key)
+		}
+
+		expectedValue := expected[literal.String()]
+
+		testIntegerLiteral(t, value, expectedValue)
+	}
+}
+
+func TestParsingHashLiteralIntegerKeys(t *testing.T) {
+	input := `{ 1: 1, 2: 2, 3: 3 }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expression is not HashLiteral, got=%T", stmt.Expression)
+	}
+
+	if len(hash.Pairs) != 3 {
+		t.Fatalf("Wrong number of hash pairs, expected=%d got=%d", 3, len(hash.Pairs))
+	}
+
+	expected := map[int64]int64{
+		1: 1,
+		2: 2,
+		3: 3,
+	}
+
+	for key, value := range hash.Pairs {
+		literal, ok := key.(*ast.IntegerLiteral)
+		if !ok {
+			t.Errorf("Key is not ast.IntegerLiteral, got=%T", key)
+		}
+
+		expectedValue := expected[literal.Value]
+
+		testIntegerLiteral(t, value, expectedValue)
+	}
+}
+
+func TestParsingHashLiteralWithExpressions(t *testing.T) {
+	input := `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expression is not HashLiteral, got=%T", stmt.Expression)
+	}
+
+	if len(hash.Pairs) != 3 {
+		t.Fatalf("Wrong number of hash pairs, expected=%d got=%d", 3, len(hash.Pairs))
+	}
+
+	tests := map[string]func(ast.Expression){
+		"one": func(e ast.Expression) {
+			testInfixExpression(t, e, 0, "+", 1)
+		},
+		"two": func(e ast.Expression) {
+			testInfixExpression(t, e, 10, "-", 8)
+		},
+		"three": func(e ast.Expression) {
+			testInfixExpression(t, e, 15, "/", 5)
+		},
+	}
+
+	for key, value := range hash.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("Key is not ast.StringLiteral, got=%T", key)
+			continue
+		}
+
+		testFunc, ok := tests[literal.String()]
+		if !ok {
+			t.Errorf("No test function for %q found", literal.String())
+		}
+
+		testFunc(value)
+	}
+}
+
+func TestParsingHashLiteralBooleanKeys(t *testing.T) {
+	input := `{true: 1, false: 0}`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expression is not HashLiteral, got=%T", stmt.Expression)
+	}
+
+	if len(hash.Pairs) != 2 {
+		t.Fatalf("Wrong number of hash pairs, expected=%d got=%d", 2, len(hash.Pairs))
+	}
+
+	expected := map[bool]int64{
+		true:  1,
+		false: 0,
+	}
+
+	for key, value := range hash.Pairs {
+		literal, ok := key.(*ast.Boolean)
+		if !ok {
+			t.Errorf("Key is not ast.Boolean, got=%T", key)
+		}
+
+		expectedValue := expected[literal.Value]
+
+		testIntegerLiteral(t, value, expectedValue)
+	}
+}
+
+func TestParsingEmptyHashLiteral(t *testing.T) {
+	input := "{}"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Expression is not HashLiteral, got=%T", stmt.Expression)
+	}
+
+	if len(hash.Pairs) != 0 {
+		t.Fatalf("Wrong number of hash pairs, expected=%d got=%d", 0, len(hash.Pairs))
+	}
+}
+
+// Private functions
 func testBakeStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "bake" {
 		t.Errorf("s.TokenLiteral not 'bake'. got=%q", s.TokenLiteral())

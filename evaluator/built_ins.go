@@ -1,6 +1,9 @@
 package evaluator
 
-import "cottagepie/object"
+import (
+	"cottagepie/object"
+	"fmt"
+)
 
 var built_ins = map[string]*object.BuiltIn{
 	"length": &object.BuiltIn{
@@ -98,6 +101,14 @@ var built_ins = map[string]*object.BuiltIn{
 				return &object.Array{Elements: newElements}
 			}
 
+			return NULL
+		},
+	},
+	"plates": &object.BuiltIn{
+		Fn: func(args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
 			return NULL
 		},
 	},
